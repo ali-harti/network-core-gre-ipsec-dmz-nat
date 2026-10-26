@@ -14,6 +14,28 @@ The project also documents what the network does **not** have (no firewall, no D
 | **Report** | [`docs/`](docs/) (French, dated 22 October 2026) |
 | **Status** | Finished. All 7 steps of the test plan pass |
 
+## Real-World Context: Why This Project Exists
+
+### 1. The Real-World Need
+In modern enterprise environments, network architecture directly dictates operational security, business continuity, and data confidentiality:
+- **Perimeter Defense & Service Exposure:** Organizations must host publicly reachable services (such as corporate web portals and authoritative DNS) to interact with clients. If these servers reside on the internal corporate network, a single application vulnerability grants attackers immediate lateral access to internal databases, HR records, and employee endpoints. A dedicated **Demilitarized Zone (DMZ)** published via **Static 1:1 NAT** is essential to isolate public-facing assets from internal user segments.
+- **Secure Site-to-Site Interconnection Over Untrusted Media:** Enterprise branches and remote offices cannot rely on cost-prohibitive dedicated dark fiber across long distances. They must route traffic over the public Internet. Sending unencrypted proprietary data, ERP transactions, and credentials across public transit exposes the organization to eavesdropping, packet alteration, and man-in-the-middle attacks.
+- **Dynamic Routing Over IPsec:** Native IPsec in tunnel mode cannot transport broadcast or multicast traffic, which breaks dynamic routing protocols like OSPF or EIGRP. Combining **Generic Routing Encapsulation (GRE)** with **IPsec (AES-256)** provides the standard solution: GRE encapsulates the dynamic routing protocol packets, and IPsec encrypts the GRE tunnel frames before transmission across the public WAN.
+
+### 2. Why We Built This Lab
+The objective was to engineer, simulate, and validate a complete multi-tier enterprise network before rolling it out to physical infrastructure. By constructing the entire topology in Cisco Packet Tracer:
+- We proved that dynamic routing protocols (EIGRP 100) can run across an encrypted WAN tunnel without leaking route advertisements to public transit routers (which run OSPF Area 0).
+- We verified that internal departmental subnets (VLANs 10 through 60) remain completely unreachable from the outside while retaining full outbound Internet connectivity via Port Address Translation (PAT).
+- We verified split-horizon DNS and static NAT, confirming external users seamlessly access DMZ services without exposing private IP addressing schemes.
+
+### 3. What Was Engineered
+- **Hierarchical Enterprise Architecture:** Scalable Core, Distribution (L3 switches with SVIs), and Access switching layers.
+- **Segmentation & Isolation:** Six departmental VLANs partitioned into two distribution blocks, an isolated DMZ subnet (`192.168.5.0/24`), and a remote branch office LAN (`192.168.6.0/24`).
+- **Dual NAT Implementation:** Static 1:1 NAT for public DMZ access (`212.217.7.3` -> `.20`, `212.217.7.4` -> `.10`) and dynamic overload PAT on edge routers.
+- **Site-to-Site GRE over IPsec:** Secure crypto maps with AES-256 encryption, pre-shared key authentication, and Diffie-Hellman Group 2.
+- **Three-Tier Routing Scheme:** Static routes to distribution switches, public OSPF Area 0 across the carrier core, and private EIGRP 100 across the encrypted tunnel.
+- **Vulnerability Assessment:** An honest security audit identifying missing stateful firewall filtering and DMZ ACLs to define actionable hardening steps.
+
 ## What it demonstrates
 
 - **Hierarchical design** (core, distribution, access) with inter-VLAN routing on layer-3 switches
