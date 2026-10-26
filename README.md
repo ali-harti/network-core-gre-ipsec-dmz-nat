@@ -8,7 +8,7 @@ The project also documents what the network does **not** have (no firewall, no D
 
 | | |
 |---|---|
-| **Author** | Ali Harti (Groupe ISGA) |
+| **Author** | Ali Harti |
 | **Tool** | Cisco Packet Tracer, source file `Core_Network.pkt` |
 | **Platform** | Cisco 2811 routers (IOS 15.1), Catalyst 3560-24PS (L3) and 2960-24TT switches |
 | **Report** | [`docs/`](docs/) (French, dated 22 October 2026) |
@@ -170,4 +170,4 @@ Packet Tracer simulates device behaviour, not performance or every security feat
 
 ## Author
 
-Ali Harti, Groupe ISGA.
+Ali Harti.
