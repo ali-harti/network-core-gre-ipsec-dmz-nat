@@ -1,0 +1,73 @@
+! RE1 - perimeter router (Cisco 2811, IOS 15.1)
+! NAT/PAT, DMZ gateway, GRE/IPsec tunnel endpoint. Pre-shared key masked.
+enable
+configure terminal
+hostname RE1
+no ip domain-lookup
+!
+interface FastEthernet0/0
+ description vers R0
+ ip address 212.217.7.1 255.255.255.248
+ ip nat outside
+ crypto map CMAP
+ no shutdown
+interface FastEthernet0/1
+ description vers SWN3A
+ ip address 192.168.3.1 255.255.255.252
+ ip nat inside
+ no shutdown
+interface FastEthernet1/0
+ description vers SWN3B
+ ip address 192.168.4.1 255.255.255.252
+ ip nat inside
+ no shutdown
+interface FastEthernet1/1
+ description vers DMZ
+ ip address 192.168.5.1 255.255.255.0
+ ip nat inside
+ no shutdown
+!
+! NAT: PAT for internal users, static NAT for the two DMZ servers
+access-list 1 permit 192.168.0.0 0.0.255.255
+ip nat inside source list 1 interface FastEthernet0/0 overload
+ip nat inside source static 192.168.5.20 212.217.7.3
+ip nat inside source static 192.168.5.10 212.217.7.4
+!
+! Routing
+ip route 0.0.0.0 0.0.0.0 212.217.7.2
+ip route 192.168.10.0 255.255.255.0 192.168.3.2
+ip route 192.168.20.0 255.255.255.0 192.168.3.2
+ip route 192.168.30.0 255.255.255.0 192.168.3.2
+ip route 192.168.40.0 255.255.255.0 192.168.4.2
+ip route 192.168.50.0 255.255.255.0 192.168.4.2
+ip route 192.168.60.0 255.255.255.0 192.168.4.2
+!
+router ospf 1
+ router-id 1.1.1.1
+ log-adjacency-changes
+ network 212.217.7.0 0.0.0.7 area 0
+!
+router eigrp 100
+ network 172.16.0.0 0.0.0.3
+ network 192.168.5.0
+ passive-interface FastEthernet1/1
+ redistribute static metric 10000 100 255 1 1500
+!
+! GRE over IPsec
+crypto isakmp policy 10
+ encr aes 256
+ authentication pre-share
+ group 2
+crypto isakmp key <PSK> address 212.217.7.10
+crypto ipsec transform-set TS-GRE esp-aes 256 esp-sha-hmac
+access-list 110 permit gre host 212.217.7.1 host 212.217.7.10
+crypto map CMAP 10 ipsec-isakmp
+ set peer 212.217.7.10
+ set transform-set TS-GRE
+ match address 110
+!
+interface Tunnel0
+ ip address 172.16.0.1 255.255.255.252
+ mtu 1476
+ tunnel source FastEthernet0/0
+ tunnel destination 212.217.7.10

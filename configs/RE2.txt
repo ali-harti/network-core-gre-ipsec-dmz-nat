@@ -1,0 +1,52 @@
+! RE2 - remote site router (Cisco 2811, IOS 15.1)
+! Local DHCP, PAT, GRE/IPsec tunnel endpoint (mirror of RE1). Pre-shared key masked.
+hostname RE2
+no ip domain-lookup
+ip dhcp excluded-address 192.168.6.1 192.168.6.9
+ip dhcp pool LAN6
+ network 192.168.6.0 255.255.255.0
+ default-router 192.168.6.1
+ dns-server 212.217.26.10
+!
+interface FastEthernet0/0
+ description vers R0
+ ip address 212.217.7.10 255.255.255.252
+ ip nat outside
+ crypto map CMAP
+ no shutdown
+interface FastEthernet0/1
+ description LAN RE2
+ ip address 192.168.6.1 255.255.255.0
+ ip nat inside
+ no shutdown
+!
+access-list 1 permit 192.168.6.0 0.0.0.255
+ip nat inside source list 1 interface FastEthernet0/0 overload
+ip route 0.0.0.0 0.0.0.0 212.217.7.9
+!
+router ospf 1
+ router-id 3.3.3.3
+ log-adjacency-changes
+ network 212.217.7.8 0.0.0.3 area 0
+router eigrp 100
+ network 172.16.0.0 0.0.0.3
+ network 192.168.6.0
+ passive-interface FastEthernet0/1
+!
+crypto isakmp policy 10
+ encr aes 256
+ authentication pre-share
+ group 2
+crypto isakmp key <PSK> address 212.217.7.1
+crypto ipsec transform-set TS-GRE esp-aes 256 esp-sha-hmac
+access-list 110 permit gre host 212.217.7.10 host 212.217.7.1
+crypto map CMAP 10 ipsec-isakmp
+ set peer 212.217.7.1
+ set transform-set TS-GRE
+ match address 110
+!
+interface Tunnel0
+ ip address 172.16.0.2 255.255.255.252
+ mtu 1476
+ tunnel source FastEthernet0/0
+ tunnel destination 212.217.7.1

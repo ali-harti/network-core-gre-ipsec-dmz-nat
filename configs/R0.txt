@@ -1,0 +1,28 @@
+! R0 - WAN core router (Cisco 2811) - transit only, no NAT, no encryption
+!
+! NOTE: this configuration is RECONSTRUCTED from the addressing plan, the default
+! routes of RE1/RE2 and the OSPF statements applied during the build (report,
+! section 7.2). Port assignment and router-id 2.2.2.2 must be confirmed with
+! "show running-config" on R0 before this file is treated as the real running config.
+enable
+configure terminal
+hostname R0
+interface FastEthernet0/0
+ description vers RE1
+ ip address 212.217.7.2 255.255.255.248
+ no shutdown
+interface FastEthernet0/1
+ description vers RE2
+ ip address 212.217.7.9 255.255.255.252
+ no shutdown
+interface FastEthernet1/0
+ description vers RI
+ ip address 212.217.7.13 255.255.255.252
+ no shutdown
+router ospf 1
+ router-id 2.2.2.2
+ network 212.217.7.0 0.0.0.7 area 0
+ network 212.217.7.8 0.0.0.3 area 0
+ network 212.217.7.12 0.0.0.3 area 0
+end
+write memory

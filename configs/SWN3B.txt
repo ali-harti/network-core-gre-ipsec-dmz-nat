@@ -1,0 +1,44 @@
+! SWN3B - distribution layer-3 switch (Catalyst 3560-24PS), block B
+! Inter-VLAN routing (SVI), DHCP for the block, routed /30 uplink to RE1
+hostname SWN3B
+ip routing
+ip dhcp excluded-address 192.168.40.1 192.168.40.10
+ip dhcp excluded-address 192.168.50.1 192.168.50.10
+ip dhcp excluded-address 192.168.60.1 192.168.60.10
+ip dhcp pool VLAN40
+ network 192.168.40.0 255.255.255.0
+ default-router 192.168.40.1
+ dns-server 192.168.5.10
+ip dhcp pool VLAN50
+ network 192.168.50.0 255.255.255.0
+ default-router 192.168.50.1
+ dns-server 192.168.5.10
+ip dhcp pool VLAN60
+ network 192.168.60.0 255.255.255.0
+ default-router 192.168.60.1
+ dns-server 192.168.5.10
+!
+interface FastEthernet0/1
+ no switchport
+ ip address 192.168.4.2 255.255.255.252
+interface FastEthernet0/2
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+interface FastEthernet0/3
+ switchport access vlan 60
+ switchport mode access
+ spanning-tree portfast
+interface GigabitEthernet0/1
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+interface GigabitEthernet0/2
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+interface Vlan40
+ ip address 192.168.40.1 255.255.255.0
+interface Vlan50
+ ip address 192.168.50.1 255.255.255.0
+interface Vlan60
+ ip address 192.168.60.1 255.255.255.0
+!
+ip route 0.0.0.0 0.0.0.0 192.168.4.1

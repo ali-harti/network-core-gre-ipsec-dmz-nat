@@ -1,0 +1,15 @@
+! RI - simulated Internet router (Cisco 2811). Advertises 212.217.26.0/24 in OSPF, no NAT.
+hostname RI
+interface FastEthernet0/0
+ description vers R0
+ ip address 212.217.7.14 255.255.255.252
+ no shutdown
+interface FastEthernet0/1
+ description LAN Internet
+ ip address 212.217.26.1 255.255.255.0
+ no shutdown
+router ospf 1
+ router-id 4.4.4.4
+ log-adjacency-changes
+ network 212.217.7.12 0.0.0.3 area 0
+ network 212.217.26.0 0.0.0.255 area 0
